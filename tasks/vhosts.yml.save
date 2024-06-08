@@ -1,0 +1,10 @@
+---
+- name: Check if web root exists
+  ansible.builtin.stat:
+    path: /var/www/{{ item }}/html
+  register: web_root
+
+- name: Check if config exists
+   ansible.builtin.stat:
+    path: /etc/nginx/sites-available/{{ item }}.conf
+  register: domain_config

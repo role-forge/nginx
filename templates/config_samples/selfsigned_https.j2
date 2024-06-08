@@ -1,0 +1,10 @@
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ item }};
+    root /var/www/{{ item }}/html;
+    index index.html index.xml;
+
+    ssl_certificate /etc/nginx/selfSigned/{{ item }}.cert;
+    ssl_certificate_key /etc/nginx/selfSigned/{{ item }}.key;
+}

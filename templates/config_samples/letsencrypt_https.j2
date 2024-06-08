@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    listen [::]:80;
+
+    return 301 https://{{ item }};
+    server_name {{ item }};
+    root /var/www/{{ item }}/html;
+    index index.html index.xml;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ item }};
+
+    root /var/www/{{ item }}/html;
+    index index.html index.xml;
+    ssl_certificate /etc/letsencrypt/live/{{ item }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ item }}/privkey.pem;
+
+}

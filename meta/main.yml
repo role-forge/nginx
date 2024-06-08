@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: Batiscafff
+  description: A role to configure and manage Nginx web server.
+  min_ansible_version: 2.9
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+  galaxy_tags: ['nginx', 'web', 'server']

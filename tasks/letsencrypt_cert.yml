@@ -1,0 +1,64 @@
+---
+- name: Install certbot
+  ansible.builtin.apt:
+    name:
+      - python3-certbot-nginx
+    state: present
+
+- name: Check if letsencrypt exists
+  ansible.builtin.stat:
+    path: /etc/letsencrypt/archive/{{ item }}
+  register: letsencrypt_status
+
+- name: Create web root dir
+  ansible.builtin.file:
+    path: /var/www/{{ item }}/html
+    state: directory
+    mode: '0755'
+  when: not letsencrypt_status.stat.exists
+
+- name: Copy page to remote host
+  ansible.builtin.copy:
+    src: files/index.html
+    dest: /var/www/{{ item }}/html/
+    mode: '0755'
+  when: not letsencrypt_status.stat.exists
+
+- name: Coppy sample to remote host
+  ansible.builtin.template:
+    src: templates/letsencrypt-sample.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+    mode: '0755'
+  when: not letsencrypt_status.stat.exists
+
+- name: Make link to cfg
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/{{ item }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    state: link
+  when: not letsencrypt_status.stat.exists
+
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  when: not letsencrypt_status.stat.exists
+
+- name: Config letetsencrypt if it is not exists
+  ansible.builtin.shell: |
+    certbot certonly --webroot -w /var/www/{{ item }}/html \
+    -d {{ item }} --register-unsafely-without-email --agree-tos
+  when: not letsencrypt_status.stat.exists
+
+- name: Unenable page
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/{{ item }}.conf
+    state: absent
+  when: not letsencrypt_status.stat.exists
+
+- name: Remove config
+  ansible.builtin.file:
+    path: /etc/nginx/sites-available/{{ item }}.conf
+    state: absent
+  when: not letsencrypt_status.stat.exists
+

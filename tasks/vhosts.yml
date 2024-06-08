@@ -1,0 +1,51 @@
+---
+- name: Check if web root exists
+  ansible.builtin.stat:
+    path: /var/www/{{ item }}/html
+  register: web_root
+
+- name: Check if config exists
+  ansible.builtin.stat:
+    path: /etc/nginx/sites-available/{{ item }}.conf
+  register: web_config
+
+- name: Make web dir
+  ansible.builtin.file:
+    path: /var/www/{{ item }}/html
+    state: directory
+    mode: '0777'
+  when: not web_root.stat.exists
+
+- name: Copy webDir to remote host
+  ansible.builtin.copy:
+    src: files/index.html
+    dest: /var/www/{{ item }}/html/
+    mode: '0755'
+  when: not web_root.stat.exists
+
+- name: Coppy config sample to remote host for domain without certs
+  ansible.builtin.template:
+    src: templates/config_samples/http.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+  when: not web_config.stat.exists and item not in nginx_letsencrypt_cert and item not in nginx_selfsigned_cert
+
+- name: Coppy config sample to remote host for domain with letsencrypt cert
+  ansible.builtin.template:
+    src: templates/config_samples/letsencrypt_https.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+  when: not web_config.stat.exists and item in nginx_letsencrypt_cert and item not in nginx_selfsigned_cert
+
+- name: Coppy config sample to remote host for domain with selfsigned cert
+  ansible.builtin.template:
+    src: templates/config_samples/selfsigned_https.j2
+    dest: /etc/nginx/sites-available/{{ item }}.conf
+  when: not web_config.stat.exists and item not in nginx_letsencrypt_cert and item in nginx_selfsigned_cert
+
+- name: Make link to cfg
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/{{ item }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    state: link
+  notify: Reload nginx
+
+

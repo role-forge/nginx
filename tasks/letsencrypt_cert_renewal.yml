@@ -1,0 +1,19 @@
+---
+- name: Ensure the script directory exists
+  ansible.builtin.file:
+    path: /usr/local/bin
+    state: directory
+
+- name: Create the renewal script
+  ansible.builtin.template:
+    src: templates/renew_certs.sh.j2
+    dest: /usr/local/bin/renew_certs.sh
+    mode: '0755'
+
+- name: Create a cron job for certificate renewal
+  ansible.builtin.cron:
+    name: "Renew Let's Encrypt certificates"
+    minute: "0"
+    hour: "0"
+    day: "1"
+    job: "/usr/local/bin/renew_certs.sh >> /var/log/renew_certs.log 2>&1"

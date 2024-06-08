@@ -1,0 +1,6 @@
+---
+nginx_letsencrypt_cert_renewal: false
+nginx_letsencrypt_cert: []
+nginx_selfsigned_cert: []
+nginx_configs: []
+nginx_vhosts: []

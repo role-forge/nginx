@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DOMAINS=({% for domain in nginx_letsencrypt_cert %}"{{ nginx_letsencrypt_cert }}" {% if not loop.last %}{% endif %}{% endfor %})
+
+for DOMAIN in "${DOMAINS[@]}"; do
+  certbot certonly --webroot -w /var/www/$DOMAIN/html -d $DOMAIN --register-unsafely-without-email --agree-tos --non-interactive --renew-by-default
+done
+
+systemctl reload nginx

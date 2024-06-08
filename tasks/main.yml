@@ -1,0 +1,36 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Nginx
+  ansible.builtin.apt:
+    name:
+      - nginx
+    state: present
+
+- name: Config letsencrypt
+  include_tasks: "letsencrypt_cert.yml"
+  loop: "{{ nginx_letsencrypt_cert }}"
+  when: nginx_letsencrypt_cert | length > 0
+
+- name: Config selfsigned
+  include_tasks: "selfsigned_cert.yml"
+  loop: "{{ nginx_selfsigned_cert }}"
+  when: nginx_selfsigned_cert | length > 0
+
+- name: Renew letsencrypt
+  include_tasks: "letsencrypt_cert_renewal.yml"
+  when: nginx_letsencrypt_cert_renewal
+
+- name: Copy custom configs
+  ansible.builtin.copy:
+    src: "{{ item }}/"
+    dest: /etc/nginx/sites-available
+  loop: "{{ nginx_configs }}"
+  when: nginx_configs | length > 0
+
+- name: Activation of domans
+  include_tasks: "vhosts.yml"
+  loop: "{{ nginx_vhosts }}"
+  when: nginx_vhosts | length > 0

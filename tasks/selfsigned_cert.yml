@@ -1,0 +1,28 @@
+---
+- name: Check if the selfSigned exists
+  ansible.builtin.stat:
+    path: /etc/nginx/selfSigned/{{ item }}.cert
+  register: self_signed_status
+
+- name: Make selfSigned dir
+  ansible.builtin.file:
+    path: /etc/nginx/selfSigned
+    state: directory
+    mode: '0755'
+
+- name: Config selfSigned key if it not exists
+  community.crypto.openssl_privatekey:
+    path: /etc/nginx/selfSigned/{{ item }}.key
+    size: 4096
+    mode: "0755"
+    type: RSA
+  when: not self_signed_status.stat.exists
+
+- name: Config selfSigned cert if it not exists
+  community.crypto.x509_certificate:
+    path: /etc/nginx/selfSigned/{{ item }}.cert
+    privatekey_path: /etc/nginx/selfSigned/{{ item }}.key
+    provider: selfsigned
+    selfsigned_not_after: "+3650d"
+    mode: "755"
+  when: not self_signed_status.stat.exists
