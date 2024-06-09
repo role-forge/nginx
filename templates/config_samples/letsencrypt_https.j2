@@ -2,7 +2,6 @@ server {
     listen 80;
     listen [::]:80;
 
-    return 301 https://{{ item }};
     server_name {{ item }};
     root /var/www/{{ item }}/html;
     index index.html index.xml;
